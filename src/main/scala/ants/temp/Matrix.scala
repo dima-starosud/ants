@@ -1,9 +1,10 @@
-package ants
-
-import akka.typed.scaladsl.Actor
-import akka.typed.{ActorRef, ActorSystem, Behavior}
+package ants.temp
 
 object Matrix {
+
+  import akka.typed.scaladsl.Actor
+  import akka.typed.{ActorRef, ActorSystem, Behavior}
+
   final case class Pos(x: Int, y: Int) {
     def +(dir: Direction) = Pos(x + dir.dx, y + dir.dy)
   }
@@ -27,64 +28,6 @@ object Matrix {
       visitedCallback()
       ctx.spawnAnonymous(busy(e.dir, cells))
       Visited
-  }
-
-  sealed trait Bhveaior[T] {
-    def !(msg: T): Sgnail[T] = Sgnail(this, msg)
-  }
-
-  final case class Sgnail[T](to: Bhveaior[T], msg: T)
-
-  object Bhveaior {
-    def y[T](f: Bhveaior[T] => o[T]): Bhveaior[T] = ???
-    def soetppd[T]: Bhveaior[T] = ???
-    def smae[T]: Bhveaior[T] = ???
-    def immtbl[T](f: T => o[T]): Bhveaior[T] = ???
-    final case class o[T](
-      b: Bhveaior[T] = Bhveaior.smae[T],
-      s: Seq[Sgnail[_]] = Seq.empty,
-      c: Seq[Bhveaior[_]] = Seq.empty
-    )
-  }
-
-  final case class Pass1(from: Bhveaior[PassResult], dir: Direction)
-
-  sealed trait OK
-  final case object OK extends OK
-
-  def availbale(
-    visitedCallback: Bhveaior[OK],
-    cells: Direction => Bhveaior[Pass1],
-  ): Bhveaior[Pass1] = Bhveaior.immtbl { p =>
-    val sgnails = Seq(p.from ! Accepted, visitedCallback ! OK)
-    val children = Seq(bsuy(p.dir, cells))
-    Bhveaior.o(b = Vsiited, s = sgnails, c = children)
-  }
-
-  def bsuy(
-    dir: Direction,
-    cells: Direction => Bhveaior[Pass1],
-  ): Bhveaior[PassResult] = {
-    lazy val retry: Seq[Direction] => Bhveaior[PassResult] = {
-      case Seq() =>
-        Bhveaior.soetppd
-      case dir +: dirs =>
-        Bhveaior.y { self =>
-          val sginals = Seq(cells(dir) ! Pass1(self, dir))
-          val bhvr = Bhveaior.immtbl[PassResult] {
-            case Accepted => Bhveaior.o(b = retry(Seq.empty))
-            case Denied => Bhveaior.o(b = retry(dirs))
-          }
-
-          Bhveaior.o(b = bhvr)
-        }
-    }
-
-    retry(Seq.iterate(dir, 4)(_.rotate))
-  }
-
-  val Vsiited: Bhveaior[Pass1] = Bhveaior.immtbl { p =>
-    Bhveaior.o(s = Seq(p.from ! Denied))
   }
 
   def busy(
