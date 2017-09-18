@@ -1,4 +1,4 @@
-package ants.temp
+package ants.imperative.examples
 
 object Matrix {
 
