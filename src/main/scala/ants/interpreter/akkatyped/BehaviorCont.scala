@@ -13,6 +13,8 @@ final case class BehaviorCont[In, A](
 }
 
 object BehaviorCont {
+  implicit def behaviorContMonad[In]: Monad[BehaviorCont[In, ?]] = new BehaviorContMonad[In]
+
   final class BehaviorContMonad[In] extends Monad[BehaviorCont[In, ?]] {
     override def pure[A](x: A): BehaviorCont[In, A] = BehaviorCont(_ (x))
 
