@@ -1,8 +1,6 @@
-package ants.interpreter.akkatyped
+package ants
 
 import akka.typed.ActorRef
-import ants.free.{ProcessId, ProcessDef}
-import ants.interpreter.akkatyped.BehaviorCont.behaviorContMonad
 import cats.Monad
 import cats.free.Free
 

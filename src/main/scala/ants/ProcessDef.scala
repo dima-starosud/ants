@@ -1,4 +1,4 @@
-package ants.free
+package ants
 
 import cats._
 import cats.free.Free

@@ -1,7 +1,7 @@
-package ants.interpreter.akkatyped
+package ants
 
-import akka.typed.{ActorRef, Behavior}
 import akka.typed.scaladsl.Actor
+import akka.typed.{ActorRef, Behavior}
 import cats.Monad
 
 final case class BehaviorCont[In, A](
