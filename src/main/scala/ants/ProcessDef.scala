@@ -34,8 +34,12 @@ final case class Recur[In]() extends ProcessDef[In, Nothing] {
 }
 
 
-final case class ProcessId[In1](impl: Any) extends AnyVal {
-  def ![In](message: In1): Free[ProcessDef[In, ?], Unit] = ProcessDef.cast(this, message)
+trait ProcessId[In1] extends Any
+
+object ProcessId {
+  implicit class ProcessIdMethods[In1](val processId: ProcessId[In1]) extends AnyVal {
+    def ![In](message: In1): Free[ProcessDef[In, ?], Unit] = ProcessDef.cast(processId, message)
+  }
 }
 
 
