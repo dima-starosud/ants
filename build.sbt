@@ -2,14 +2,6 @@ name := "ants"
 
 scalaVersion := "2.12.3"
 
-scalacOptions ++= Seq(
-  "-feature",
-  "-deprecation",
-  "-Ypartial-unification",
-  "-language:higherKinds",
-  "-language:existentials",
-)
-
 lazy val akkaVersion = "2.5.4"
 
 libraryDependencies ++= Seq(
