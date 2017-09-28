@@ -14,6 +14,7 @@ scalacOptions ++= Seq(
   "-language:higherKinds",
   "-language:implicitConversions",
   "-unchecked",
+  "-Xlog-implicits",
   "-Xcheckinit",
   "-Xfatal-warnings",
   "-Xfuture",
