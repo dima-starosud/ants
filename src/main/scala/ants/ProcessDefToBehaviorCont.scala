@@ -18,7 +18,7 @@ final class ProcessDefToBehaviorCont[In] extends ProcessDef.Visitor[In, Behavior
     Monad[BehaviorCont[In, ?]].map(BehaviorCont.spawn(behavior))(_.asInstanceOf[ProcessId[In1]])
   }
 
-  override def stop: BehaviorCont[In, Nothing] = BehaviorCont.stop
+  override def stop: BehaviorCont[In, Bottom] = BehaviorCont.stop
 
-  override def recur: BehaviorCont[In, Nothing] = BehaviorCont.recur
+  override def recur: BehaviorCont[In, Bottom] = BehaviorCont.recur
 }

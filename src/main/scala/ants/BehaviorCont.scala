@@ -48,9 +48,9 @@ object BehaviorCont {
     Actor.deferred(ctx => k(ctx.spawnAnonymous(cont.behavior)))
   }
 
-  def stop[In]: BehaviorCont[In, Nothing] =
+  def stop[In]: BehaviorCont[In, Bottom] =
     BehaviorCont(Function.const(Actor.stopped))
 
-  def recur[In]: BehaviorCont[In, Nothing] =
+  def recur[In]: BehaviorCont[In, Bottom] =
     BehaviorCont(Function.const(Actor.same))
 }

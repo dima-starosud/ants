@@ -25,12 +25,12 @@ final case class Spawn[In, In1](
   override def visit[F[_]](v: ProcessDef.Visitor[In, F]): F[ProcessId[In1]] = v.spawn(process)
 }
 
-final case class Stop[In]() extends ProcessDef[In, Nothing] {
-  override def visit[F[_]](v: ProcessDef.Visitor[In, F]): F[Nothing] = v.stop
+final case class Stop[In]() extends ProcessDef[In, Bottom] {
+  override def visit[F[_]](v: ProcessDef.Visitor[In, F]): F[Bottom] = v.stop
 }
 
-final case class Recur[In]() extends ProcessDef[In, Nothing] {
-  override def visit[F[_]](v: ProcessDef.Visitor[In, F]): F[Nothing] = v.recur
+final case class Recur[In]() extends ProcessDef[In, Bottom] {
+  override def visit[F[_]](v: ProcessDef.Visitor[In, F]): F[Bottom] = v.recur
 }
 
 
@@ -51,8 +51,8 @@ object ProcessDef {
     def receive: F[In]
     def cast[In1](pid: ProcessId[In1], message: In1): F[Unit]
     def spawn[In1](process: Free[ProcessDef[In1, ?], Nothing]): F[ProcessId[In1]]
-    def stop: F[Nothing]
-    def recur: F[Nothing]
+    def stop: F[Bottom]
+    def recur: F[Bottom]
   }
 
   def self[In]: Free[ProcessDef[In, ?], ProcessId[In]] =
@@ -67,9 +67,9 @@ object ProcessDef {
   def spawn[In, In1](process: Free[ProcessDef[In1, ?], Nothing]): Free[ProcessDef[In, ?], ProcessId[In1]] =
     Free.liftF[ProcessDef[In, ?], ProcessId[In1]](Spawn(process))
 
-  def stop[In]: Free[ProcessDef[In, ?], Nothing] =
+  def stop[In]: Free[ProcessDef[In, ?], Bottom] =
     Free.liftF[ProcessDef[In, ?], Nothing](Stop())
 
-  def recur[In]: Free[ProcessDef[In, ?], Nothing] =
+  def recur[In]: Free[ProcessDef[In, ?], Bottom] =
     Free.liftF[ProcessDef[In, ?], Nothing](Recur())
 }
