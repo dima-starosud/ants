@@ -9,10 +9,16 @@ final case class BehaviorCont[In, A](
 ) extends ((A => Behavior[In]) => Behavior[In]) {
   override def apply(k: A => Behavior[In]): Behavior[In] = cont(k)
 
-  def behavior(implicit ev: A =:= Nothing) = cont(identity)
+  def behavior(implicit ev: A =:= Nothing): Behavior[In] = cont(identity)
 }
 
 object BehaviorCont {
+  final case class ContActorRef[In] private[BehaviorCont](
+    private[BehaviorCont] val impl: ActorRef[In]
+  ) {
+    def ![In0](msg: In): BehaviorCont[In0, Unit] = BehaviorCont.cast(this, msg)
+  }
+
   implicit def behaviorContMonad[In]: Monad[BehaviorCont[In, ?]] = new BehaviorContMonad[In]
 
   final class BehaviorContMonad[In] extends Monad[BehaviorCont[In, ?]] {
@@ -30,22 +36,22 @@ object BehaviorCont {
   def from[In](behavior: Behavior[In]): BehaviorCont[In, Unit] =
     BehaviorCont(Function.const(behavior))
 
-  def self[In]: BehaviorCont[In, ActorRef[In]] = BehaviorCont { k =>
-    Actor.deferred(ctx => k(ctx.self))
+  def self[In]: BehaviorCont[In, ContActorRef[In]] = BehaviorCont { k =>
+    Actor.deferred(ctx => k(ContActorRef(ctx.self)))
   }
 
   def receive[In]: BehaviorCont[In, In] = BehaviorCont { k =>
     Actor.immutable((_, e) => k(e))
   }
 
-  def cast[In, In1](actorRef: ActorRef[In1], message: In1): BehaviorCont[In, Unit] = BehaviorCont { k =>
-    Actor.deferred(_ => k(actorRef ! message))
+  def cast[In, In1](actorRef: ContActorRef[In1], message: In1): BehaviorCont[In, Unit] = BehaviorCont { k =>
+    Actor.deferred(_ => k(actorRef.impl ! message))
   }
 
   def spawn[In, In1](
-    cont: BehaviorCont[In1, Nothing]
-  ): BehaviorCont[In, ActorRef[In1]] = BehaviorCont { k =>
-    Actor.deferred(ctx => k(ctx.spawnAnonymous(cont.behavior)))
+    cont: BehaviorCont[In1, Bottom]
+  ): BehaviorCont[In, ContActorRef[In1]] = BehaviorCont { k =>
+    Actor.deferred(ctx => k(ContActorRef(ctx.spawnAnonymous(cont.behavior))))
   }
 
   def stop[In]: BehaviorCont[In, Bottom] =
@@ -53,4 +59,20 @@ object BehaviorCont {
 
   def recur[In]: BehaviorCont[In, Bottom] =
     BehaviorCont(Function.const(Actor.same))
+
+  trait LazyProxy[T] {
+    type Proxy <: T
+    def proxy: Proxy
+    def fill(proxy: Proxy, value: T): Unit
+  }
+
+  def mfix[In, T](f: T => BehaviorCont[In, T])(implicit lp: LazyProxy[T]): BehaviorCont[In, T] = {
+    BehaviorCont[In, T] { k =>
+      val proxy = lp.proxy
+      f(proxy).cont { value =>
+        lp.fill(proxy, value)
+        k(value)
+      }
+    }
+  }
 }

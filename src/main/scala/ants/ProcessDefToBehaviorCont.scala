@@ -1,6 +1,6 @@
 package ants
 
-import akka.typed.ActorRef
+import ants.BehaviorCont.ContActorRef
 import cats.Monad
 import cats.free.Free
 
@@ -11,7 +11,7 @@ final class ProcessDefToBehaviorCont[In] extends ProcessDef.Visitor[In, Behavior
   override def receive: BehaviorCont[In, In] = BehaviorCont.receive
 
   override def cast[In1](pid: ProcessId[In1], message: In1): BehaviorCont[In, Unit] =
-    BehaviorCont.cast(pid.asInstanceOf[ActorRef[In1]], message)
+    BehaviorCont.cast(pid.asInstanceOf[ContActorRef[In1]], message)
 
   override def spawn[In1](process: Free[ProcessDef[In1, ?], Nothing]): BehaviorCont[In, ProcessId[In1]] = {
     val behavior = process.foldMap(new ProcessDefToBehaviorCont[In1])
