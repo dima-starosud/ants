@@ -23,17 +23,15 @@ object Matrix {
   def available(
     visitedCallback: () => Unit,
     cells: Direction => ContActorRef[Pass],
-  ): BehaviorCont[Pass, Bottom] = {
-    BehaviorCont.receive[Pass]
-      .flatMap {
-        e =>
-          visitedCallback()
-          BehaviorCont.spawn(busy(e.dir, cells))
-      }
-      .flatMap(_ => Visited)
-  }
-
-  def UNUSED(x: Any*): Unit = Function.const(())(x)
+  ): BehaviorCont[Pass, Bottom] =
+    (for {
+      e <- BehaviorCont.receive[Pass]
+      _ <- e.from ! Accepted: BehaviorCont[Pass, Unit]
+      _ = visitedCallback()
+      _ <- BehaviorCont.spawn[Pass, PassResult](busy(e.dir, cells))
+    } yield {
+      Visited
+    }).flatten
 
   def busy(
     dir: Direction,
@@ -54,7 +52,6 @@ object Matrix {
 
     retry(Seq.iterate(dir, 4)(_.rotate))
   }
-
 
   lazy val Visited: BehaviorCont[Pass, Bottom] = {
     BehaviorCont.receive[Pass]
