@@ -1,8 +1,12 @@
 package ants
 
+import java.util.concurrent.atomic.AtomicReference
+
 import akka.typed.scaladsl.Actor
 import akka.typed.{ActorRef, Behavior}
 import cats.Monad
+import cats.implicits._
+
 
 final case class BehaviorCont[In, A](
   cont: (A => Behavior[In]) => Behavior[In]
@@ -60,19 +64,15 @@ object BehaviorCont {
   def recur[In]: BehaviorCont[In, Bottom] =
     BehaviorCont(Function.const(Actor.same))
 
-  trait LazyProxy[T] {
-    type Proxy <: T
-    def proxy: Proxy
-    def fill(proxy: Proxy, value: T): Unit
-  }
+  def empty[In]: BehaviorCont[In, Bottom] =
+    BehaviorCont(Function.const(Actor.empty))
 
-  def mfix[In, T](f: T => BehaviorCont[In, T])(implicit lp: LazyProxy[T]): BehaviorCont[In, T] = {
-    BehaviorCont[In, T] { k =>
-      val proxy = lp.proxy
-      f(proxy).cont { value =>
-        lp.fill(proxy, value)
-        k(value)
-      }
+  def mfix[In, T](f: (() => T) => BehaviorCont[In, T]): BehaviorCont[In, T] = {
+    val proxy = new AtomicReference(Option.empty[T])
+    val get = () => proxy.get().getOrElse(throw new StackOverflowError("BehaviorCont.mfix"))
+    f(get).map { value =>
+      proxy.set(Some(value))
+      value
     }
   }
 }

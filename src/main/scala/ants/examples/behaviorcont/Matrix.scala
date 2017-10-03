@@ -3,6 +3,7 @@ package ants.examples.behaviorcont
 import ants.{BehaviorCont, Bottom}
 import cats.implicits._
 import BehaviorCont.{ContActorRef, behaviorContMonad}
+import akka.typed.ActorSystem
 
 object Matrix {
   final case class Pos(x: Int, y: Int) {
@@ -94,49 +95,27 @@ object Matrix {
   }
 
 
-  //  def circle(xs: Int, ys: Int): Behavior[Bottom] = Actor.deferred[Bottom] { ctx =>
-  //    lazy val cells: Map[Pos, ContActorRef[Pass]] = {
-  //      val xss = Seq.range(1, xs + 1)
-  //      val yss = Seq.range(1, ys + 1)
-  //
-  //      val active =
-  //        for {
-  //          x <- xss
-  //          y <- yss
-  //        } yield {
-  //          val pos = Pos(x, y)
-  //          val ref = ctx.spawnAnonymous(
-  //            available(() => println(pos), d => cells(pos + d)))
-  //          pos -> ref
-  //        }
-  //
-  //      val sc = Stream.continually[Int] _
-  //      val border =
-  //        for {
-  //          (x, y) <- xss.zip(sc(0)) ++ xss.zip(sc(ys + 1)) ++ sc(0).zip(yss) ++ sc(xs + 1).zip(yss)
-  //        } yield {
-  //          Pos(x, y) -> ctx.spawnAnonymous(Visited)
-  //        }
-  //
-  //      (active ++ border).toMap
-  //    }
-  //
-  //    val initiator = ctx.spawnAnonymous(Actor.immutable[PassResult] {
-  //      (_, e) =>
-  //        e match {
-  //          case Accepted =>
-  //            println("Successfully started...")
-  //          case Denied =>
-  //            println("Something went wrong :(")
-  //        }
-  //        Actor.stopped
-  //    })
-  //
-  //    cells(Pos(1, 1)) ! Pass(initiator, Direction(1, 0))
-  //
-  //    Actor.empty
-  //  }
-  //
-  //  def runCircle(xs: Int, ys: Int): ActorSystem[Bottom] =
-  //    ActorSystem[Bottom](Matrix.circle(xs, ys), "Matrix-circle")
+  def circle(xs: Int, ys: Int): BehaviorCont[Bottom, Bottom] = {
+    val cells = BehaviorCont.mfix[Bottom, Cells] {
+      cs => Matrix.cells(xs, ys)(pos => cs()(pos))
+    }
+
+    val initiator = BehaviorCont.receive[PassResult]
+      .flatMap { e =>
+        e match {
+          case Accepted =>
+            println("Successfully started...")
+          case Denied =>
+            println("Something went wrong :(")
+        }
+        BehaviorCont.stop
+      }
+
+    (cells product BehaviorCont.spawn(initiator))
+      .flatMap { case (cs, i) => cs(Pos(1, 1)) ! Pass(i, Direction(1, 0)) }
+      .flatMap(_ => BehaviorCont.empty)
+  }
+
+  def runCircle(xs: Int, ys: Int): ActorSystem[Bottom] =
+    ActorSystem[Bottom](Matrix.circle(xs, ys).behavior, "Matrix-circle")
 }
