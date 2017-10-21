@@ -13,7 +13,8 @@ libraryDependencies ++= Seq(
 
   //  "org.atnos" %% "eff-monix" % "4.6.1",
   "org.typelevel" %% "cats-free" % "1.0.0-MF",
-  "org.typelevel" %% "cats-effect" % "0.4",
+
+  "com.chuusai" %% "shapeless" % "2.3.2",
 
   "org.scalatest" %% "scalatest" % "3.0.1" % "test",
 )
