@@ -14,8 +14,8 @@ object Testing extends FallbackImplicit {
 
   println(implicitly[Forall[C]].apply)
 
-  println(implicitly[Forall[Lambda[X => Eff[ENil, X] => Eff[Option :-: ENil, X]]]].apply)
+  //  println(implicitly[Forall[Lambda[X => Eff[ENil, X] => Eff[Option :-: ENil, X]]]].apply)
 
   val z: Eff[ENil, Int] = null
-  val y: Eff[Option :-: ENil, Int] = z
+  //  val y: Eff[Option :-: ENil, Int] = z
 }

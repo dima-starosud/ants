@@ -7,11 +7,10 @@ sealed trait Forall[C[_]] extends Any {
 object Forall {
   def apply[C[_]]: ForallBuilder[C] = new ForallBuilder[C]
 
-  protected type HackToOvercome_SI_5643_SI_9625
-
   implicit def genericImplicitHelper[C[_]](
-    gb: ForallBuilder[C])(implicit value: C[HackToOvercome_SI_5643_SI_9625]
-  ): Forall[C] = gb(value.asInstanceOf[C[gb.Any]])
+    /** doesn't [always] work due to some bugs :( */
+    gb: ForallBuilder[C])(implicit value: C[gb.Any]
+  ): Forall[C] = gb(value)
 
   implicit def genericImplicit[C[_]](
     implicit helper: ForallBuilder[C] => Forall[C]
